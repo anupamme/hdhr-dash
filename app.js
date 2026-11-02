@@ -349,6 +349,22 @@ async function loadStationDatabase() {
   }
 }
 
+function isValidStationMap(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
+  const keys = Object.keys(data);
+  if (keys.length === 0) return false;
+  return keys.every((key) => {
+    if (typeof key !== 'string' || key.length === 0 || key.length > 16) return false;
+    const entry = data[key];
+    return (
+      Array.isArray(entry) &&
+      entry.length === 2 &&
+      typeof entry[0] === 'string' && entry[0].length <= 64 &&
+      typeof entry[1] === 'string' && entry[1].length <= 32
+    );
+  });
+}
+
 async function updateStationDatabaseFromWebsite(force = false) {
   const btnUpdateStations = document.getElementById('btn-update-stations');
   if (btnUpdateStations && force) {
@@ -361,7 +377,7 @@ async function updateStationDatabaseFromWebsite(force = false) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const freshData = await res.json();
 
-    if (freshData && typeof freshData === 'object' && Object.keys(freshData).length > 0) {
+    if (isValidStationMap(freshData)) {
       const newCount = Object.keys(freshData).length;
 
       state.stationMap = freshData;
